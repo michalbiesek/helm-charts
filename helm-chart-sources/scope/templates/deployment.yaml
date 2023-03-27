@@ -1,61 +1,60 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "scope.fullname" . }}-webhook-cert-sa
+  labels:
+  {{- include "scope.labels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "scope.fullname" . }}-cert-sa
+  labels:
+  {{- include "scope.labels" . | nindent 4 }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "scope.fullname" . }}
+  name: {{ include "scope.fullname" . }}-scope
   labels:
-    {{- include "scope.labels" . | nindent 4 }}
+    app: scope
+  {{- include "scope.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: {{ .Values.scope.replicas }}
   selector:
     matchLabels:
-      {{- include "scope.selectorLabels" . | nindent 6 }}
+      app: scope
+    {{- include "scope.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        {{- include "scope.selectorLabels" . | nindent 8 }}
+        app: scope
+      {{- include "scope.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "scope.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      - args:
+        - -c
+        - /usr/local/bin/scope k8s --server --metricdest /tmp/metrics.log --metricformat
+          ndjson --eventdest /tmp/events.log || sleep 1000
+        command:
+        - /bin/bash
+        env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.scope.scope.image.repository }}:{{ .Values.scope.scope.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.scope.scope.imagePullPolicy }}
+        name: scope
+        ports:
+        - containerPort: 4443
+          protocol: TCP
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/certs
+          name: certs
+          readOnly: true
+      serviceAccountName: {{ include "scope.fullname" . }}-cert-sa
+      volumes:
+      - name: certs
+        secret:
+          secretName: scope-secret

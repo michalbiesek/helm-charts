@@ -52,6 +52,20 @@ appscope:
     format: "statsd"
 ```
 
+## Basic Configuration for Appscope Prometheus Exporter
+
+To send `prometheus` metrics to a Appscope Prometheus Exporter deployment, use the following configuration:
+
+```yaml
+# Appscope configuration 
+appscope:
+  destinations: 
+    format: "prometheus"
+promexporter:
+  enable: true
+```
+
+
 # Support/Feedback
 
 If you use this helm chart, we'd love to hear any feedback you might have on this chart. Join us on our [Slack Community](https://cribl.io/community) and navigate to the `#appscope` or `containers` channel.
@@ -64,16 +78,19 @@ For additional documentation about the values used in this chart, see the [Cribl
 
 This section covers the most likely values to override. To see the full scope of values available, run `helm show values cribl/appscope`.
 
-| Key                                                                            | Default Value                       | Description                                        |
-|--------------------------------------------------------------------------------|-------------------------------------|----------------------------------------------------|
-| image.repository                                                               | `cribl/scope`                       | Docker image repository to pull images             |
-| image.pullPolicy                                                               | `Always`                            | When will the Node pull the image                  |
-| image.tag                                                                      | `1.4.0`                             | The Version of Appscope to deploy                  |
-| imagePullSecrets                                                               | `[]`                                | Credentials to pull container images               |
-| appscope.destinations.cribl                                                    |                                     | Cribl Stream destination for metrics & events      |
-| appscope.destinations.metrics                                                  |                                     | Destination for Metrics                            |
-| appscope.destinations.events                                                   |                                     | Destination for Events                             |
-| appscope.token                                                                 |                                     | AuthToken for Cribl Stream                         |
-| appscope.destinations.format                                                   | `ndjson`                            | Format of metrics output (statsd|ndjson)           |
-| appscope.debug                                                                 | `false`                             | Enable logging in the scope webhook container      |
-| cert.signername                                                                | `kubernetes.io/kubelet-serving`     | Name of the signer used for certificate request    |
+| Key                                                                            | Default Value                       | Description                                            |
+|--------------------------------------------------------------------------------|-------------------------------------|--------------------------------------------------------|
+| image.repository                                                               | `cribl/scope`                       | Docker image repository to pull images                 |
+| image.pullPolicy                                                               | `Always`                            | When will the Node pull the image                      |
+| image.tag                                                                      | `1.4.0`                             | The Version of Appscope to deploy                      |
+| imagePullSecrets                                                               | `[]`                                | Credentials to pull container images                   |
+| appscope.destinations.cribl                                                    |                                     | Cribl Stream destination for metrics & events          |
+| appscope.destinations.metrics                                                  |                                     | Destination for Metrics                                |
+| appscope.destinations.events                                                   |                                     | Destination for Events                                 |
+| appscope.token                                                                 |                                     | AuthToken for Cribl Stream                             |
+| appscope.destinations.format                                                   | `ndjson`                            | Format of metrics output (statsd|ndjson|prometheus)    |
+| appscope.debug                                                                 | `false`                             | Enable logging in the scope webhook container          |
+| cert.signername                                                                | `kubernetes.io/kubelet-serving`     | Name of the signer used for certificate request        |
+| promexporter.enable                                                            | `false`                             | Enable Appscope prometheus exporter                    |
+| promexporter.ports.scope                                                       | `9109`                              | Port for libscope metrics                              |
+| promexporter.ports.metrics                                                     | `9090`                              | Port for HTTP metrics requests                         |

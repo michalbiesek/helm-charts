@@ -15,6 +15,11 @@ spec:
       labels:
         app: appscope
       {{- include "appscope.selectorLabels" . | nindent 8 }}
+      {{- if .Values.promexporter.enable }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ toString .Values.promexporter.ports.metrics }}"
+      {{- end }}
     spec:
       containers:
       - args:
@@ -23,10 +28,12 @@ spec:
           {{- if .Values.appscope.destinations.cribl }}
           --cribldest {{ .Values.appscope.destinations.cribl }}
           {{- end }}
-          {{- if .Values.appscope.destinations.metrics }}
+          {{- if .Values.promexporter.enable }}
+          --metricdest "tcp://scope-prom-exporter:{{ toString .Values.promexporter.ports.scope }}"
+          {{- else if .Values.appscope.destinations.metrics }}
           --metricdest {{ .Values.appscope.destinations.metrics }}
-          --metricformat {{ .Values.appscope.destinations.format }}
           {{- end }}
+          --metricformat {{ .Values.appscope.destinations.format }}
           {{- if .Values.appscope.destinations.events }}
           --eventdest {{ .Values.appscope.destinations.events }}
           {{- end }}
@@ -57,6 +64,26 @@ spec:
         - mountPath: /etc/certs
           name: certs
           readOnly: true
+      {{- if .Values.promexporter.enable }}
+      - args:
+        - -c
+        - /usr/local/bin/scope prom
+          --mport {{ .Values.promexporter.ports.metrics }}
+          --sport {{ .Values.promexporter.ports.scope }}
+        command:
+        - /bin/bash
+        env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: scope-prom-export
+        ports:
+        - containerPort: {{ .Values.promexporter.ports.metrics }}
+          protocol: TCP
+        - containerPort: {{ .Values.promexporter.ports.scope }}
+          protocol: TCP
+      {{- end }}
       serviceAccountName: {{ include "appscope.fullname" . }}-cert-sa
       volumes:
       - name: certs

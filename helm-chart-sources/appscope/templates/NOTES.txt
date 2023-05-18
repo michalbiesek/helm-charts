@@ -4,6 +4,8 @@ Your release is named {{ .Release.Name }}.
 
 To add AppScope to newly-launched containers in a specified namespace, apply the label 'scope=enabled' to your namespace(s) to enable automatic instrumentation.
 
+To exclude newly-launched containers in a specified namespace, apply the annotation 'appscope.dev/disable=true'.
+
 The following example label the 'default' namespace: kubectl label namespace default scope=enabled
 
 Data destination:
@@ -16,6 +18,8 @@ Events and metrics will be sent to {{ .Values.appscope.destinations.cribl }}
 Events will be sent to {{ .Values.appscope.destinations.events }}
 {{- end }}
 
-{{- if .Values.appscope.destinations.metrics }}
+{{- if .Values.promexporter.enable }}
+Metrics will be sent to Appscope Prometheus exporter tcp://scope-prom-export:{{ .Values.promexporter.ports.metrics }}
+{{- else if .Values.appscope.destinations.metrics }}
 Metrics will be sent to {{ .Values.appscope.destinations.metrics }}
 {{- end }}

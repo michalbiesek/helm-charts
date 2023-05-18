@@ -55,7 +55,16 @@ data:
       authtoken: {{ .Values.appscope.token }}
     {{- end }}
     metric:
-      {{- if not .Values.appscope.destinations.metrics }}
+      {{- if .Values.promexporter.enable }}
+      enable: true
+      transport:
+        type: tcp
+        host: scope-prom-export
+        port: {{ .Values.promexporter.ports.scope }}
+        tls:
+          enable: false
+          validateserver: true
+      {{- else if not .Values.appscope.destinations.metrics }}
       enable: false
       {{- else if eq .Values.appscope.destinations.metrics "edge" }}
       enable: true
@@ -100,6 +109,7 @@ data:
       {{- end }}
       format:
         type: {{ .Values.appscope.destinations.format }}
+        statsdprefix: appscope
         verbosity: 4
       watch:
       - type: fs

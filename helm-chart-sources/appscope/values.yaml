@@ -22,7 +22,7 @@ appscope:
     cribl:
     # -- Destination for Metrics
     metrics:
-    # -- Format of metrics output (statsd|ndjson)
+    # -- Format of metrics output (statsd|ndjson|prometheus)
     format: "ndjson"
     # -- Destination for Events
     events:
@@ -57,7 +57,7 @@ appscope:
   token:
   # -- Enable debug logging in the AppScope Webhook Admissions Controller
   debug: false
-  # -- Specify specific  metrtics creates metrics for different categories of events from a container
+  # -- Specify specific metrtics creates metrics for different categories of events from a container
 
 # -- Kubernetes service for the AppScope Webhook Admissions Controller
 service:
@@ -67,6 +67,16 @@ service:
     port: 443
     protocol: TCP
     targetPort: 4443
+
+promexporter:
+  # -- Enable AppScope Prometheus exporter
+  enable: false
+  # -- Kubernetes service for the AppScope Prometheus exporter
+  ports:
+    # --Port for libscope metrics
+    scope: 9109
+    # --Port for HTTP metrics requests
+    metrics: 9090
 
 nodeSelector: {}
 

@@ -5,7 +5,6 @@ metadata:
   labels:
   {{- include "appscope.labels" . | nindent 4 }}
 data:
-  validation: {{ required "Following destination must be defined: cribl or events and metrics" (or .Values.appscope.destinations.cribl (and .Values.appscope.destinations.metrics .Values.appscope.destinations.events)) }}
   scope.yml: |
     cribl:
       {{- if not .Values.appscope.destinations.cribl }}
